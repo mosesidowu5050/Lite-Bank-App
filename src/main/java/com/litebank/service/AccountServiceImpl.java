@@ -37,9 +37,17 @@ public class AccountServiceImpl implements AccountService {
     private final NotificationService notificationService;
 
 
+//    @Override
+//    public CreateAccountResponse create(CreateAccountRequest createAccountRequest) {
+//        Account account = modelMapper.map(createAccountRequest, Account.class);
+//        account.setAccountNumber(generateAccountNumber());
+//        account = accountRepository.save(account);
+//        return modelMapper.map(account, CreateAccountResponse.class);
+//    }
+
+
     @Override
     public CreateAccountResponse createAccount(CreateAccountRequest createAccountRequest) {
-
         if (accountRepository.findByUsername(createAccountRequest.getUsername()).isPresent()) {
             throw new UsernameAlreadyTakenException("Username already taken");
         }
@@ -47,7 +55,7 @@ public class AccountServiceImpl implements AccountService {
         Account account = new Account();
         account.setName(normalizeName(createAccountRequest.getName()));
         account.setUsername(createAccountRequest.getUsername());
-        account.setPassword(passwordEncoder.encode(createAccountRequest.getPassword()));
+        account.setPassword(createAccountRequest.getPassword());
         account.setAccountType(createAccountRequest.getAccountType());
 
         String accountNumber;
@@ -59,13 +67,20 @@ public class AccountServiceImpl implements AccountService {
         Account saved = accountRepository.save(account);
 
         CreateAccountResponse response = new CreateAccountResponse();
+        response.setMessage("Account created successfully");
+        response.setAccountHolderName(toTitleCase(saved.getUsername()));
         response.setAccountNumber(saved.getAccountNumber());
-        response.setAccountHolderName(toTitleCase(saved.getName()));
         response.setAccountType(saved.getAccountType());
 
         return response;
     }
 
+    @Override
+    public AccountResponse getByUsername(String username) {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new AccountNotFoundException("account not found"));
+        return modelMapper.map(account, AccountResponse.class);
+    }
 
 
     @Override
