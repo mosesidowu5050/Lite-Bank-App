@@ -12,10 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class User implements UserDetails {
 
-//    public static void main(String[] args) {
-//        System.out.println(Base64.getEncoder().encodeToString("This is a jwt token".getBytes()));
-//    }
-
     private AccountResponse accountResponse;
 
     @Override
