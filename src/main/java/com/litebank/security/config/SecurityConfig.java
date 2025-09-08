@@ -29,11 +29,9 @@ public class SecurityConfig {
                 .csrf(c -> c.disable())
                 .cors(Customizer.withDefaults())
                 .addFilterAt(authenticationFilter, BasicAuthenticationFilter.class)
-                .authorizeHttpRequests(
-                        c -> c
-                                .requestMatchers(HttpMethod.POST, "/api/v1/account/create-account", "/login").permitAll()
-                                .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(c->c.requestMatchers(HttpMethod.POST,
+                        "/api/v1/account/create-account", "/login").permitAll())
+                .authorizeHttpRequests(c->c.anyRequest().authenticated())
                 .build();
     }
 

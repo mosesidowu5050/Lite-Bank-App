@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,13 +12,22 @@ import java.util.List;
 @AllArgsConstructor
 public class User implements UserDetails {
 
+//    public static void main(String[] args) {
+//        System.out.println(Base64.getEncoder().encodeToString("This is a jwt token".getBytes()));
+//    }
+
     private AccountResponse accountResponse;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        //TODO: Remove hardcoded authority
-        return List.of(new SimpleGrantedAuthority("USER"));
-    }
+            List<SimpleGrantedAuthority> authorities = accountResponse.getAuthorities()  //[ACCOUNT, ADMIN]
+                    .stream()
+                    .map((authority )->
+                            new SimpleGrantedAuthority(authority.name()))//[ACCOUNT, ADMIN] -> [GrantedAuthority(ACCOUNT), grantedAuthority(ADMIN)]
+                    .toList();
+            return authorities;
+        }
+
 
     @Override
     public String getPassword() {

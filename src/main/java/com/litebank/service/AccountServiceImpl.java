@@ -66,9 +66,13 @@ public class AccountServiceImpl implements AccountService {
         account.setAccountNumber(accountNumber);
         Account saved = accountRepository.save(account);
 
+        return getCreateAccountResponse(saved);
+    }
+
+    private CreateAccountResponse getCreateAccountResponse(Account saved) {
         CreateAccountResponse response = new CreateAccountResponse();
         response.setMessage("Account created successfully");
-        response.setAccountHolderName(toTitleCase(saved.getUsername()));
+        response.setAccountHolderName(toTitleCase(saved.getName()));
         response.setAccountNumber(saved.getAccountNumber());
         response.setAccountType(saved.getAccountType());
 
@@ -79,6 +83,7 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse getByUsername(String username) {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(() -> new AccountNotFoundException("account not found"));
+
         return modelMapper.map(account, AccountResponse.class);
     }
 

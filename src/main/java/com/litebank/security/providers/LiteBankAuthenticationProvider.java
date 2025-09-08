@@ -26,14 +26,14 @@ public class LiteBankAuthenticationProvider implements AuthenticationProvider {
         String username = authentication.getPrincipal().toString();
         String password = authentication.getCredentials().toString();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        String savePassword =userDetails.getPassword();
+        String savePassword = userDetails.getPassword();
 
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
         boolean isPasswordValidMatch = passwordEncoder.matches(password, savePassword);
 
         if(isPasswordValidMatch){
-            return new UsernamePasswordAuthenticationToken(username, null, null);
+            return new UsernamePasswordAuthenticationToken(username, null, authorities);
         }
         throw new BadCredentialsException("Invalid auth credentials supplied, try again later");
     }

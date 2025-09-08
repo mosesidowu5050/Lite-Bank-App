@@ -20,8 +20,13 @@ public class LiteBankApplication {
 	}
 
 
+//	@Bean
+//	public PasswordEncoder passwordEncoder() {
+//		return new BCryptPasswordEncoder();
+//	}
+
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+    return NoOpPasswordEncoder.getInstance();
+    }
 }

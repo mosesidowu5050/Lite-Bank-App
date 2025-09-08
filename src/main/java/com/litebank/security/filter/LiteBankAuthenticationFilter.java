@@ -9,6 +9,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,54 +25,61 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LiteBankAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
+    private final ObjectMapper mapper;
+
+    @Value("${jwt.signing.key}")
+    private String signingKey;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        if(!request.getServletPath().equals("/login")) {
-            filterChain.doFilter(request, response);
-            return;
+        try{
+                if (!request.getServletPath().equals("/login")) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                InputStream requestBody = request.getInputStream(); //{"username":"", "password":""} what we have here is json
+                AuthRequest authRequest = mapper.readValue(requestBody, AuthRequest.class);
+                String username = authRequest.getUsername();
+                String password = authRequest.getPassword();
+                Authentication authentication = new UsernamePasswordAuthenticationToken(username, password);
+                Authentication authResult = authenticationManager.authenticate(authentication);
+
+                if (authResult.isAuthenticated()) {
+                    String jwt = JWT.create()
+                            .withIssuer("https://litebank.com")
+                            .withIssuedAt(Instant.now())
+                            .withExpiresAt(Instant.now().plusSeconds(60 * 60 * 24))
+                            .withSubject(username)
+                            .withClaim("roles", authResult.getAuthorities()
+                                    .stream()
+                                    .map(a-> a.getAuthority()).toList())
+                            .sign(Algorithm.HMAC256(signingKey));
+
+                    Map<String, String> loginResponse = new HashMap<>();
+                    loginResponse.put("access_token", jwt);
+                    loginResponse.put("username", username);
+                    response.setContentType("application/json");
+                    response.getOutputStream().write(mapper.writeValueAsBytes(loginResponse));
+                    response.flushBuffer();
+                }
+
+        } catch(Exception exception){
+                Map<String, String> loginResponse = new HashMap<>();
+                loginResponse.put("error", exception.getMessage());
+                response.setContentType("application/json");
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                response.getOutputStream().write(mapper.writeValueAsBytes(loginResponse));
+                response.flushBuffer();
         }
-
-        ObjectMapper mapper = new ObjectMapper();
-        InputStream requestBody = request.getInputStream();
-        byte[] body = requestBody.readAllBytes();
-
-        AuthRequest authRequest = mapper.readValue(body, AuthRequest.class);
-        String username = authRequest.getUsername();
-        String password = authRequest.getPassword();
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(username, password);
-        Authentication authResult = authenticationManager.authenticate(authentication);
-        if(authResult.isAuthenticated()) {
-            String jwt = JWT.create()
-                    .withIssuer("http://litebank.com")
-                    .withIssuedAt(Instant.now())
-                    .withExpiresAt(Instant.now().plusSeconds(60 * 60 * 24))
-                    .withSubject(username)
-                    .withClaim("roles", authResult.getAuthorities().stream()
-                            .map(a-> a.getAuthority()).toList())
-                    .sign(Algorithm.HMAC256("secret"));
-
-            Map<String, String> loginResponse = new HashMap<>();
-            loginResponse.put("access_token", jwt);
-            response.setContentType("application/json");
-            response.getOutputStream().write(mapper.writeValueAsBytes(loginResponse));
-            response.flushBuffer();
-        } else {
-            Map<String, String> loginResponse = new HashMap<>();
-            loginResponse.put("response", "authentication failed");
-            response.setContentType("application/json");
-            response.getOutputStream().write(mapper.writeValueAsBytes(loginResponse));
-            response.flushBuffer();
-        }
-        filterChain.doFilter(request, response);
+       filterChain.doFilter(request, response);
     }
 
 
