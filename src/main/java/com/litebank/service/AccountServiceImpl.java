@@ -62,7 +62,6 @@ public class AccountServiceImpl implements AccountService {
         do {
             accountNumber = generateAccountNumber();
         } while (accountRepository.findByAccountNumber(accountNumber).isPresent());
-
         account.setAccountNumber(accountNumber);
         Account saved = accountRepository.save(account);
 

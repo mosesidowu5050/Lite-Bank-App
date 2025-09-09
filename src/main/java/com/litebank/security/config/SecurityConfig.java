@@ -1,6 +1,7 @@
 package com.litebank.security.config;
 
 import com.litebank.security.filter.LiteBankAuthenticationFilter;
+import com.litebank.security.filter.LiteBankAuthorizationFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,11 +18,16 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 import javax.sql.DataSource;
 
+import static com.litebank.model.Authority.ACCOUNT;
+import static com.litebank.model.Authority.ADMIN;
+import static com.litebank.util.ProjectUtil.PUBLIC_ENDPOINTS;
+
 @Configuration
 @AllArgsConstructor
 public class SecurityConfig {
 
     private final LiteBankAuthenticationFilter authenticationFilter;
+    private final LiteBankAuthorizationFilter authorizationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -29,22 +35,13 @@ public class SecurityConfig {
                 .csrf(c -> c.disable())
                 .cors(Customizer.withDefaults())
                 .addFilterAt(authenticationFilter, BasicAuthenticationFilter.class)
-                .authorizeHttpRequests(c->c.requestMatchers(HttpMethod.POST,
-                        "/api/v1/account/create-account", "/login").permitAll())
-                .authorizeHttpRequests(c->c.anyRequest().authenticated())
+                .addFilterBefore(authorizationFilter, LiteBankAuthenticationFilter.class)
+                .authorizeHttpRequests(c ->
+                        c.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll())
+                .authorizeHttpRequests(c ->
+                        c.requestMatchers("/api/v1/transactions/**", "/api/v1/account/**")
+                                .hasAnyAuthority(ACCOUNT.name(), ADMIN.name()))
                 .build();
     }
-
-
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationProvider authenticationProvider) throws Exception{
-//        return (authentication) -> authenticationProvider.authenticate(authentication);
-//    }
-
-//    @Bean
-//    public UserDetailsService userDetailsService(@Autowired DataSource dataSource) throws Exception {
-//        return new JdbcUserDetailsManager();
-//    }
-
 
 }

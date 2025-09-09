@@ -18,15 +18,4 @@ public class LiteBankApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LiteBankApplication.class, args);
 	}
-
-
-//	@Bean
-//	public PasswordEncoder passwordEncoder() {
-//		return new BCryptPasswordEncoder();
-//	}
-
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-    return NoOpPasswordEncoder.getInstance();
-    }
 }

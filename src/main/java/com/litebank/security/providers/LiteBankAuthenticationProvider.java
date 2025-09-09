@@ -21,6 +21,7 @@ public class LiteBankAuthenticationProvider implements AuthenticationProvider {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getPrincipal().toString();
@@ -29,7 +30,6 @@ public class LiteBankAuthenticationProvider implements AuthenticationProvider {
         String savePassword = userDetails.getPassword();
 
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-
         boolean isPasswordValidMatch = passwordEncoder.matches(password, savePassword);
 
         if(isPasswordValidMatch){

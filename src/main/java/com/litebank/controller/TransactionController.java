@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/transactions")
 @AllArgsConstructor
 public class TransactionController {
 
     private final TransactionService transactionService;
 
-    @GetMapping("/transactions/{accountNumber}")
-    public ResponseEntity<?> getTransactionByAccountNumber(@PathVariable String accountNumber) {
+    @GetMapping("/{account_number}")
+    public ResponseEntity<?> getTransactionByAccountNumber(@PathVariable(name = "account_number") String accountNumber) {
         try {
             List<TransactionResponse> transaction = transactionService.getTransactionsFor(accountNumber);
             return ResponseEntity.status(HttpStatus.OK).body(transaction);

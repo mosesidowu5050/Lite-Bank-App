@@ -6,15 +6,22 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 
 @AllArgsConstructor
 public class User implements UserDetails {
 
+
+//    public static void main(String[] args) {
+//        System.out.println(Base64.getEncoder()
+//                .encodeToString("This is a very secure jwt secret key".getBytes()));
+//    }
+
     private AccountResponse accountResponse;
 
-    @Override
+        @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
             List<SimpleGrantedAuthority> authorities = accountResponse.getAuthorities()  //[ACCOUNT, ADMIN]
                     .stream()
